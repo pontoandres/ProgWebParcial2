@@ -1,26 +1,37 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Profesor } from './entities/profesor.entity';
 import { CreateProfesorDto } from './dto/create-profesor.dto';
-import { UpdateProfesorDto } from './dto/update-profesor.dto';
 
 @Injectable()
 export class ProfesorService {
-  create(createProfesorDto: CreateProfesorDto) {
-    return 'This action adds a new profesor';
+  constructor(
+    @InjectRepository(Profesor)
+    private profesorRepository: Repository<Profesor>,
+  ) {}
+
+  async crearProfesor(dto: CreateProfesorDto): Promise<Profesor> {
+    if (dto.extension.toString().length !== 5) {
+      throw new Error('La extensión debe tener exactamente 5 dígitos');
+    }
+    return this.profesorRepository.save(dto);
   }
 
-  findAll() {
-    return `This action returns all profesor`;
-  }
+  async asignarEvaluador(id: number): Promise<string> {
+    const profesor = await this.profesorRepository.findOne({
+      where: { id },
+      relations: ['evaluaciones', 'evaluaciones.proyecto'],
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} profesor`;
-  }
+    const activas = profesor.evaluaciones.filter(e => e.proyecto.estado < 4).length;
+    if (activas >= 3) {
+      throw new Error('Este profesor ya tiene 3 evaluaciones activas');
+    }
 
-  update(id: number, updateProfesorDto: UpdateProfesorDto) {
-    return `This action updates a #${id} profesor`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} profesor`;
+    profesor.esParEvaluador = true;
+    await this.profesorRepository.save(profesor);
+    return 'Evaluador asignado';
   }
 }

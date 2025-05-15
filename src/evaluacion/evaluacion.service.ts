@@ -1,26 +1,33 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Evaluacion } from './entities/evaluacion.entity';
 import { CreateEvaluacionDto } from './dto/create-evaluacion.dto';
-import { UpdateEvaluacionDto } from './dto/update-evaluacion.dto';
 
 @Injectable()
 export class EvaluacionService {
-  create(createEvaluacionDto: CreateEvaluacionDto) {
-    return 'This action adds a new evaluacion';
-  }
+  constructor(
+    @InjectRepository(Evaluacion)
+    private evaluacionRepository: Repository<Evaluacion>,
+  ) {}
 
-  findAll() {
-    return `This action returns all evaluacion`;
-  }
+  async crearEvaluacion(dto: CreateEvaluacionDto): Promise<Evaluacion> {
+    if (dto.evaluadorId === dto.mentorId) {
+      throw new Error('El evaluador no puede ser el mentor');
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} evaluacion`;
-  }
+    if (dto.calificacion < 0 || dto.calificacion > 5) {
+      throw new Error('La calificación debe estar entre 0 y 5');
+    }
 
-  update(id: number, updateEvaluacionDto: UpdateEvaluacionDto) {
-    return `This action updates a #${id} evaluacion`;
-  }
+    const evaluacion = this.evaluacionRepository.create({
+      calificacion: dto.calificacion,
+      evaluador: { id: dto.evaluadorId },
+      mentor: { id: dto.mentorId },
+      proyecto: { id: dto.proyectoId },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} evaluacion`;
+    return this.evaluacionRepository.save(evaluacion);
   }
 }

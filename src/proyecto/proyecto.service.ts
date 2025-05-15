@@ -1,26 +1,42 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Proyecto } from './entities/proyecto.entity';
 import { CreateProyectoDto } from './dto/create-proyecto.dto';
-import { UpdateProyectoDto } from './dto/update-proyecto.dto';
+import { Estudiante } from '../estudiante/entities/estudiante.entity';
 
 @Injectable()
 export class ProyectoService {
-  create(createProyectoDto: CreateProyectoDto) {
-    return 'This action adds a new proyecto';
+  constructor(
+    @InjectRepository(Proyecto)
+    private proyectoRepository: Repository<Proyecto>,
+  ) {}
+
+  async crearProyecto(dto: CreateProyectoDto): Promise<Proyecto> {
+    if (dto.presupuesto <= 0 || dto.titulo.length <= 15) {
+      throw new Error('Presupuesto debe ser > 0 y título > 15 caracteres');
+    }
+    return this.proyectoRepository.save(dto);
   }
 
-  findAll() {
-    return `This action returns all proyecto`;
+  async avanzarProyecto(id: number): Promise<Proyecto> {
+    const proyecto = await this.proyectoRepository.findOne({ where: { id } });
+    if (!proyecto) throw new Error('Proyecto no encontrado');
+
+    if (proyecto.estado >= 4) {
+      throw new Error('Proyecto ya en estado máximo');
+    }
+
+    proyecto.estado += 1;
+    return this.proyectoRepository.save(proyecto);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} proyecto`;
-  }
+  async findAllEstudiantes(id: number): Promise<Estudiante[]> {
+    const proyecto = await this.proyectoRepository.findOne({
+      where: { id },
+      relations: ['lider'],
+    });
 
-  update(id: number, updateProyectoDto: UpdateProyectoDto) {
-    return `This action updates a #${id} proyecto`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} proyecto`;
+    return [proyecto.lider]; // según el UML solo hay 1 líder
   }
 }
