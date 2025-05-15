@@ -11,7 +11,4 @@ export class EvaluacionController {
   async crearEvaluacion(@Body() dto: CreateEvaluacionDto) {
     return this.evaluacionService.crearEvaluacion(dto);
   }
-
-  
-  }
 }

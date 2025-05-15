@@ -25,6 +25,8 @@ export class ProfesorService {
       relations: ['evaluaciones', 'evaluaciones.proyecto'],
     });
 
+    if (!profesor) throw new Error('Profesor no encontrado');
+
     const activas = profesor.evaluaciones.filter(e => e.proyecto.estado < 4).length;
     if (activas >= 3) {
       throw new Error('Este profesor ya tiene 3 evaluaciones activas');

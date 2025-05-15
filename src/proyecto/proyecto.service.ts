@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,7 +17,14 @@ export class ProyectoService {
     if (dto.presupuesto <= 0 || dto.titulo.length <= 15) {
       throw new Error('Presupuesto debe ser > 0 y título > 15 caracteres');
     }
-    return this.proyectoRepository.save(dto);
+
+    const proyecto = this.proyectoRepository.create({
+      ...dto,
+      lider: { id: dto.lider },
+      mentor: { id: dto.mentor },
+    });
+
+    return this.proyectoRepository.save(proyecto);
   }
 
   async avanzarProyecto(id: number): Promise<Proyecto> {
@@ -37,6 +45,7 @@ export class ProyectoService {
       relations: ['lider'],
     });
 
-    return [proyecto.lider]; // según el UML solo hay 1 líder
+    if (!proyecto) throw new Error('Proyecto no encontrado');
+    return [proyecto.lider];
   }
 }
