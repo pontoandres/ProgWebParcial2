@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,7 +13,7 @@ export class EstudianteService {
 
   async crearEstudiante(dto: CreateEstudianteDto): Promise<Estudiante> {
     if (dto.promedio <= 3.2 || dto.semestre < 4) {
-      throw new Error('Estudiante no cumple con los requisitos de promedio y semestre');
+      throw new Error('Estudiante no cumple con los requisitos');
     }
     return this.estudianteRepository.save(dto);
   }
@@ -25,10 +24,10 @@ export class EstudianteService {
       relations: ['proyectos'],
     });
 
-    const tieneActivos = estudiante?.proyectos?.some(p => p.estado < 4);
-    if (tieneActivos) {
-      throw new Error('No se puede eliminar el estudiante con proyectos activos');
-    }
+    if (!estudiante) throw new Error('Estudiante no encontrado');
+
+    const tieneActivos = estudiante.proyectos.some(p => p.estado < 4);
+    if (tieneActivos) throw new Error('Tiene proyectos activos');
 
     await this.estudianteRepository.remove(estudiante);
   }
