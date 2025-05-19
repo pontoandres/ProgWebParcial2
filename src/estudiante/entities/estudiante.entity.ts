@@ -20,7 +20,7 @@ export class Estudiante {
   @Column()
   programa: string;
 
-  @Column()
+  @Column('float')
   promedio: number;
 
   @OneToMany(() => Proyecto, proyecto => proyecto.lider)

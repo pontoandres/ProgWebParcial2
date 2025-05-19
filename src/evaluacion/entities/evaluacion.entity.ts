@@ -17,6 +17,6 @@ export class Evaluacion {
   @ManyToOne(() => Profesor)
   mentor: Profesor;
 
-  @Column()
+  @Column('float')
   calificacion: number;
 }
